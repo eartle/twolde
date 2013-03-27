@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>uk.co.mobbler.twolde</string>
+    <key>ProgramArguments</key>
+    <array>
+    	<string>%PYTHON%</string>
+        <string>-u</string>
+        <string>%SCRIPT%</string>
+        <string>run</string>
+        <string>%USER_USERNAME%</string>
+        <string>%USER_TOKEN_KEY%</string>
+        <string>%USER_TOKEN_KEY_SECRET%</string>
+        <string>%OLDE_USER_USERNAME%</string>
+        <string>%OLDE_USER_TOKEN_KEY%</string>
+        <string>%OLDE_USER_TOKEN_KEY_SECRET%</string>
+    </array>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>%LOG_FILE%</string>
+    <key>StandardErrorPath</key>
+    <string>%LOG_FILE%</string>
+</dict>
+</plist>
