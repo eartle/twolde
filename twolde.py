@@ -131,7 +131,7 @@ elif sys.argv[1] == "run":
 
 				# do retweets properly
 				if next_tweet.retweeted:
-					olde_api.retweet(id=next_tweet.id)
+					olde_api.retweet(id=next_tweet.retweeted_status.id)
 				else:
 					olde_api.update_status(status=next_tweet.text, in_reply_to_user_id=next_tweet.in_reply_to_user_id)
 
