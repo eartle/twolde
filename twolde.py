@@ -82,6 +82,8 @@ elif sys.argv[1] == "install":
 elif sys.argv[1] == "rm":
 	uninstall()
 elif sys.argv[1] == "run":
+	print '\n\n===Twolde==='
+
 	new_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 	new_auth.set_access_token(sys.argv[3], sys.argv[4])
 	new_api = tweepy.API(new_auth)
@@ -121,8 +123,8 @@ elif sys.argv[1] == "run":
 				now, last_year = get_times()
 				sleep_seconds = (next_tweet.created_at - last_year).total_seconds()
 
-				print "Next tweet: \"%s\"" % next_tweet.text
-				print "Next tweet time: %s (in %f seconds)" % (next_tweet.created_at.ctime(), sleep_seconds)
+				print 'Next tweet: "{}"'.format(next_tweet.text.encode('utf-8'))
+				print 'Next tweet time: {} (in {} seconds)'.format(next_tweet.created_at.ctime(), sleep_seconds)
 
 				# it's possible (if you were tweeting quickly) that your next tweet is already in the past
 				# so only sleep if we need to. We should eventually catch up
