@@ -4,8 +4,8 @@ import tweepy
 import subprocess
 import time
 import HTMLParser
-import time
 import webbrowser
+import sched
 from datetime import datetime
 
 consumer_key = 'i4VfqFLIY7E08Ros9AhA'
@@ -73,6 +73,12 @@ def uninstall():
 def usage():
 	sys.exit('Usage:\nInstall: twolde.py install\nUninstall: twolde.py rm\n')
 
+def do_retweet(id):
+	olde_api.retweet(id=id)
+
+def do_tweet(text, in_reply_to_user_id):
+	olde_api.update_status(status=text, in_reply_to_user_id=in_reply_to_user_id)
+
 
 # very basic argument parsing
 if len(sys.argv) < 2:
@@ -117,6 +123,8 @@ elif sys.argv[1] == "run":
 				index -= 1
 				best = user_timeline[index].created_at
 
+			s = sched.scheduler(time.time, time.sleep)
+
 			while index >= 0:
 				next_tweet = user_timeline[index]
 
@@ -126,16 +134,13 @@ elif sys.argv[1] == "run":
 				print 'Next tweet: "{}"'.format(next_tweet.text.encode('utf-8'))
 				print 'Next tweet time: {} (in {} seconds)'.format(next_tweet.created_at.ctime(), sleep_seconds)
 
-				# it's possible (if you were tweeting quickly) that your next tweet is already in the past
-				# so only sleep if we need to. We should eventually catch up
-				if sleep_seconds>0:
-					time.sleep(sleep_seconds)
-
 				# do retweets properly
 				if next_tweet.retweeted:
-					olde_api.retweet(id=next_tweet.retweeted_status.id)
+					s.enter(max(1, sleep_seconds), 1, do_retweet, [next_tweet.retweeted_status.id])
 				else:
-					olde_api.update_status(status=next_tweet.text, in_reply_to_user_id=next_tweet.in_reply_to_user_id)
+					s.enter(max(1, sleep_seconds), 1, do_tweet, [next_tweet.text, next_tweet.in_reply_to_user_id])
+				
+				s.run()
 
 				index -= 1
 
