@@ -98,6 +98,8 @@ elif sys.argv[1] == "run":
 	olde_auth.set_access_token(sys.argv[6], sys.argv[7])
 	olde_api = tweepy.API(olde_auth)
 
+	s = sched.scheduler(time.time, time.sleep)
+
 	now, last_year = get_times()
 	best = now
 
@@ -123,7 +125,7 @@ elif sys.argv[1] == "run":
 				index -= 1
 				best = user_timeline[index].created_at
 
-			s = sched.scheduler(time.time, time.sleep)
+
 
 			while index >= 0:
 				next_tweet = user_timeline[index]
