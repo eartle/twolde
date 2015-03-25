@@ -32,11 +32,11 @@ def authenticate_user(user, message):
     verifier = raw_input("Please enter the PIN from Twitter to complete the authorization process: ")
 
     try:
-        token = auth.get_access_token(verifier)
+        key, secret = auth.get_access_token(verifier)
     except tweepy.TweepError:
         sys.exit('Authentication Error\n')
     
-    return auth.get_username(), token.key, token.secret
+    return auth.get_username(), key, secret
 
 def get_details():
     if platform.system() is not "Darwin":
