@@ -7,7 +7,6 @@ import subprocess
 import platform
 import time
 import HTMLParser
-import webbrowser
 import sched
 from datetime import datetime
 import ConfigParser
@@ -29,7 +28,7 @@ def authenticate_user(user, message):
     authorization_url = auth.get_authorization_url()
     authorization_url += '&force_login=true'
     raw_input(message)
-    webbrowser.open(authorization_url)
+    print authorization_url
     verifier = raw_input("Please enter the PIN from Twitter to complete the authorization process: ")
 
     try:
