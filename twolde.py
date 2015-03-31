@@ -9,25 +9,30 @@ import sched
 from datetime import datetime
 import ConfigParser
 
-config_filename = 'config.ini'
+CONFIG_FILENAME = 'config.ini'
 
-consumer_key = 'i4VfqFLIY7E08Ros9AhA'
-consumer_secret = 'XP0JjlMMPtaC0IOvHv6VXzE31izdiUy1rXcoPeYg'
+CONSUMER_KEY = 'i4VfqFLIY7E08Ros9AhA'
+CONSUMER_SECRET = 'XP0JjlMMPtaC0IOvHv6VXzE31izdiUy1rXcoPeYg'
 
-plist = 'uk.co.mobbler.twolde.plist'
+PLIST = 'uk.co.mobbler.twolde.plist'
+PLIST_PATH = '~/Library/LaunchAgents/' + PLIST
+
 
 def get_times():
     now = datetime.utcnow()
-    last_year = datetime( now.year - 1, now.month, now.day, now.hour, now.minute, now.second, now.microsecond, now.tzinfo )
+    last_year = datetime(now.year - 1, now.month, now.day, now.hour,
+                         now.minute, now.second, now.microsecond, now.tzinfo)
     return now, last_year
 
+
 def authenticate_user(user, message):
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     authorization_url = auth.get_authorization_url()
     authorization_url += '&force_login=true'
     raw_input(message)
     print authorization_url
-    verifier = raw_input("Please enter the PIN from Twitter to complete the authorization process: ")
+    verifier = raw_input("Please enter the PIN from Twitter to complete the "
+                         "authorization process: ")
 
     try:
         key, secret = auth.get_access_token(verifier)
@@ -36,45 +41,53 @@ def authenticate_user(user, message):
 
     return auth.get_username(), key, secret
 
+
 def get_details():
     if platform.system() is not "Darwin":
-        Config = ConfigParser.ConfigParser()
-        Config.read(config_filename)
-        return Config.get("current", "username"), Config.get("current", "key"), Config.get("current", "secret"), Config.get("olde", "username"), Config.get("olde", "key"), Config.get("olde", "secret")
+        config = ConfigParser.ConfigParser()
+        config.read(CONFIG_FILENAME)
+        return config.get("current", "username"), config.get("current", "key"), config.get("current", "secret"), config.get("olde", "username"), config.get("olde", "key"), config.get("olde", "secret")
     else:
         return sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7]
 
+
 def install():
-    username, key, secret = authenticate_user('user', 'Press Enter to authenticate your current account with Twitter...')
-    olde_username, olde_key, olde_secret = authenticate_user('olde_user', 'Press Enter to authenticate the year olde account with Twitter...')
+    username, key, secret = authenticate_user(
+        'user',
+        'Press Enter to authenticate your current account with Twitter...')
+    olde_username, olde_key, olde_secret = authenticate_user(
+        'olde_user',
+        'Press Enter to authenticate the year olde account with Twitter...')
 
     if platform.system() is not "Darwin":
-        Config = ConfigParser.ConfigParser()
+        config = ConfigParser.ConfigParser()
         # write the olde details
-        Config.add_section("olde")
-        Config.set("olde", "username", olde_username)
-        Config.set("olde", "key", olde_key)
-        Config.set("olde", "secret", olde_secret)
-        #write the current details
-        Config.add_section("current")
-        Config.set("current", "username", username)
-        Config.set("current", "key", key)
-        Config.set("current", "secret", secret)
+        config.add_section("olde")
+        config.set("olde", "username", olde_username)
+        config.set("olde", "key", olde_key)
+        config.set("olde", "secret", olde_secret)
+        # write the current details
+        config.add_section("current")
+        config.set("current", "username", username)
+        config.set("current", "key", key)
+        config.set("current", "secret", secret)
         # save the config file
-        cfgfile = open(config_filename, 'w')
-        Config.write(cfgfile)
+        cfgfile = open(CONFIG_FILENAME, 'w')
+        config.write(cfgfile)
         cfgfile.close()
     else:
         string = ""
 
         # read from the plist
-        with open(os.path.realpath(plist), 'r') as f:
+        with open(os.path.realpath(PLIST), 'r') as f:
             string = f.read()
 
         # replace the plist strings
-        string = string.replace("%PYTHON%", os.popen('which python').read().strip())
+        string = string.replace("%PYTHON%",
+                                os.popen('which python').read().strip())
         string = string.replace("%SCRIPT%", os.path.realpath('twolde.py'))
-        string = string.replace("%LOG_FILE%", os.path.expanduser('~/Library/Logs/twolde.log'))
+        string = string.replace("%LOG_FILE%", os.path.expanduser(
+                                '~/Library/Logs/twolde.log'))
         string = string.replace("%USER_USERNAME%", username)
         string = string.replace("%USER_TOKEN_KEY%", key)
         string = string.replace("%USER_TOKEN_KEY_SECRET%", secret)
@@ -82,21 +95,23 @@ def install():
         string = string.replace("%OLDE_USER_TOKEN_KEY%", olde_key)
         string = string.replace("%OLDE_USER_TOKEN_KEY_SECRET%", olde_secret)
 
-        if os.path.isfile(os.path.expanduser('~/Library/LaunchAgents/' + plist)):
-            os.popen('launchctl unload -w ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
+        if os.path.isfile(os.path.expanduser(PLIST_PATH)):
+            os.popen('launchctl unload -w ' + os.path.expanduser(PLIST_PATH))
 
         # write the plist
-        with open(os.path.expanduser('~/Library/LaunchAgents/' + plist), 'w') as f:
+        with open(os.path.expanduser(PLIST_PATH), 'w') as f:
             string = f.write(string)
 
         # don't wait for a restart for launchd to notice this
         os.system('chmod a+x twolde.py')
-        os.popen('launchctl load -w ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
+        os.popen('launchctl load -w ' + os.path.expanduser(PLIST_PATH))
+
 
 def uninstall():
-    if os.path.isfile(os.path.expanduser('~/Library/LaunchAgents/' + plist)):
-        os.popen('launchctl unload -w ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
-        os.popen('rm ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
+    if os.path.isfile(os.path.expanduser(PLIST_PATH)):
+        os.popen('launchctl unload -w ' +
+                 os.path.expanduser(PLIST_PATH))
+        os.popen('rm ' + os.path.expanduser(PLIST_PATH))
 
 
 def run():
@@ -107,11 +122,11 @@ def run():
     except ConfigParser.NoSectionError:
         sys.exit('Error: did you remember to python twolde.py install?\n')
 
-    new_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    new_auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     new_auth.set_access_token(key, secret)
     new_api = tweepy.API(new_auth)
 
-    olde_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    olde_auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     olde_auth.set_access_token(olde_key, olde_secret)
     olde_api = tweepy.API(olde_auth)
 
