@@ -3,10 +3,8 @@
 import os
 import sys
 import tweepy
-import subprocess
 import platform
 import time
-import HTMLParser
 import sched
 from datetime import datetime
 import ConfigParser
@@ -35,7 +33,7 @@ def authenticate_user(user, message):
         key, secret = auth.get_access_token(verifier)
     except tweepy.TweepError:
         sys.exit('Authentication Error\n')
-    
+
     return auth.get_username(), key, secret
 
 def get_details():
@@ -93,7 +91,7 @@ def install():
 
         # don't wait for a restart for launchd to notice this
         os.system('chmod a+x twolde.py')
-        os.popen('launchctl load -w ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))  
+        os.popen('launchctl load -w ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
 
 def uninstall():
     if os.path.isfile(os.path.expanduser('~/Library/LaunchAgents/' + plist)):
@@ -120,7 +118,10 @@ if __name__ == '__main__':
     elif sys.argv[1] == "run":
         print '\n\n===Twolde==='
 
-        username, key, secret, olde_username, olde_key, olde_secret = get_details()
+        try:
+            username, key, secret, olde_username, olde_key, olde_secret = get_details()
+        except ConfigParser.NoSectionError:
+            sys.exit('Error: did you remember to python twolde.py install?\n')
 
         new_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
         new_auth.set_access_token(key, secret)
@@ -173,7 +174,7 @@ if __name__ == '__main__':
                         s.enter(max(1, sleep_seconds), 1, do_retweet, [next_tweet.retweeted_status.id])
                     else:
                         s.enter(max(1, sleep_seconds), 1, do_tweet, [next_tweet.text, next_tweet.in_reply_to_user_id])
-                    
+
                     s.run()
 
                     index -= 1
