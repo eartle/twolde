@@ -98,14 +98,99 @@ def uninstall():
         os.popen('launchctl unload -w ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
         os.popen('rm ' + os.path.expanduser('~/Library/LaunchAgents/' + plist))
 
+
+def run():
+    print '\n\n===Twolde==='
+
+    try:
+        username, key, secret, olde_username, olde_key, olde_secret = get_details()
+    except ConfigParser.NoSectionError:
+        sys.exit('Error: did you remember to python twolde.py install?\n')
+
+    new_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    new_auth.set_access_token(key, secret)
+    new_api = tweepy.API(new_auth)
+
+    olde_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    olde_auth.set_access_token(olde_key, olde_secret)
+    olde_api = tweepy.API(olde_auth)
+
+    s = sched.scheduler(time.time, time.sleep)
+
+    now, last_year = get_times()
+    best = now
+
+    max_id = None
+    user_timeline = tweepy.models.ResultSet()
+    index = 0
+
+    # iterate back through pages of 200 tweets until
+    # the last tweet is more than a year ago
+    while best > last_year:
+        if max_id:
+            user_timeline += new_api.user_timeline(
+                screen_name=username, count=200, include_rts=1,
+                max_id=(max_id - 1))
+        else:
+            user_timeline += new_api.user_timeline(
+                screen_name=username, count=200, include_rts=1)
+
+        index = len(user_timeline) - 1
+
+        best = user_timeline[index].created_at
+        max_id = user_timeline[index].id
+
+        if best < last_year:
+            # go forward through the tweets until
+            # we find the first one since a year ago
+            while best < last_year:
+                index -= 1
+                best = user_timeline[index].created_at
+
+            while index >= 0:
+                next_tweet = user_timeline[index]
+
+                now, last_year = get_times()
+                sleep_seconds = (
+                    next_tweet.created_at - last_year).total_seconds()
+
+                print 'Next tweet: "{}"'.format(
+                    next_tweet.text.encode('utf-8'))
+                print 'Next tweet time: {} (in {} seconds)'.format(
+                    next_tweet.created_at.ctime(), sleep_seconds)
+
+                # do retweets properly
+                if next_tweet.retweeted:
+                    s.enter(max(1, sleep_seconds), 1, do_retweet,
+                            [olde_api, next_tweet.retweeted_status.id])
+                else:
+                    s.enter(max(1, sleep_seconds), 1, do_tweet,
+                            [olde_api, next_tweet.text,
+                             next_tweet.in_reply_to_user_id])
+
+                s.run()
+
+                index -= 1
+
+            # we've run out of tweets since we started so start again
+            user_timeline = tweepy.models.ResultSet()
+            max_id = None
+            best, last_year = get_times()
+
+    print "I'm finished!"
+
+
 def usage():
     sys.exit('Usage:\nInstall: twolde.py install\nUninstall: twolde.py rm\n')
 
-def do_retweet(id):
-    olde_api.retweet(id=id)
 
-def do_tweet(text, in_reply_to_user_id):
-    olde_api.update_status(status=text, in_reply_to_user_id=in_reply_to_user_id)
+def do_retweet(api, id):
+    api.retweet(id=id)
+
+
+def do_tweet(api, text, in_reply_to_user_id):
+    api.update_status(status=text, in_reply_to_user_id=in_reply_to_user_id)
+
 
 if __name__ == '__main__':
     # very basic argument parsing
@@ -116,75 +201,6 @@ if __name__ == '__main__':
     elif sys.argv[1] == "rm":
         uninstall()
     elif sys.argv[1] == "run":
-        print '\n\n===Twolde==='
-
-        try:
-            username, key, secret, olde_username, olde_key, olde_secret = get_details()
-        except ConfigParser.NoSectionError:
-            sys.exit('Error: did you remember to python twolde.py install?\n')
-
-        new_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-        new_auth.set_access_token(key, secret)
-        new_api = tweepy.API(new_auth)
-
-        olde_auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-        olde_auth.set_access_token(olde_key, olde_secret)
-        olde_api = tweepy.API(olde_auth)
-
-        s = sched.scheduler(time.time, time.sleep)
-
-        now, last_year = get_times()
-        best = now
-
-        max_id = None
-        user_timeline = tweepy.models.ResultSet()
-        index = 0
-
-        # iterate back theough pages of 200 tweets until the last tweet is more than a year ago
-        while best > last_year:
-            if max_id:
-                user_timeline += new_api.user_timeline(screen_name=username, count=200, include_rts=1, max_id=(max_id - 1))
-            else:
-                user_timeline += new_api.user_timeline(screen_name=username, count=200, include_rts=1)
-
-            index = len(user_timeline) - 1
-
-            best = user_timeline[index].created_at
-            max_id = user_timeline[index].id
-
-            if best < last_year:
-                # go forward through the tweets until we find the first one since a year ago
-                while best < last_year:
-                    index -= 1
-                    best = user_timeline[index].created_at
-
-
-
-                while index >= 0:
-                    next_tweet = user_timeline[index]
-
-                    now, last_year = get_times()
-                    sleep_seconds = (next_tweet.created_at - last_year).total_seconds()
-
-                    print 'Next tweet: "{}"'.format(next_tweet.text.encode('utf-8'))
-                    print 'Next tweet time: {} (in {} seconds)'.format(next_tweet.created_at.ctime(), sleep_seconds)
-
-                    # do retweets properly
-                    if next_tweet.retweeted:
-                        s.enter(max(1, sleep_seconds), 1, do_retweet, [next_tweet.retweeted_status.id])
-                    else:
-                        s.enter(max(1, sleep_seconds), 1, do_tweet, [next_tweet.text, next_tweet.in_reply_to_user_id])
-
-                    s.run()
-
-                    index -= 1
-
-                # we've run out of tweets since we started so start again
-                user_timeline = tweepy.models.ResultSet()
-                max_id = None
-                best, last_year = get_times()
-
-        print "I'm finished!"
+        run()
     else:
         usage()
-
