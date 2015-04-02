@@ -174,6 +174,7 @@ def run():
                 print 'Next tweet time: {} UTC (in {} seconds)'.format(
                     next_tweet.created_at.ctime(), sleep_seconds)
 
+
                 # do retweets properly
                 if next_tweet.retweeted:
                     s.enter(max(1, sleep_seconds), 1, do_retweet,
@@ -181,7 +182,7 @@ def run():
                 else:
                     s.enter(max(1, sleep_seconds), 1, do_tweet,
                             [olde_api, next_tweet.text,
-                             next_tweet.in_reply_to_user_id])
+                             next_tweet.in_reply_to_status_id])
 
                 s.run()
 
@@ -203,8 +204,8 @@ def do_retweet(api, id):
     api.retweet(id=id)
 
 
-def do_tweet(api, text, in_reply_to_user_id):
-    api.update_status(status=text, in_reply_to_user_id=in_reply_to_user_id)
+def do_tweet(api, text, in_reply_to_status_id):
+    api.update_status(status=text, in_reply_to_status_id=in_reply_to_status_id)
 
 
 if __name__ == '__main__':
