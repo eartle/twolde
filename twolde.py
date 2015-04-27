@@ -25,7 +25,7 @@ def get_times():
     return now, last_year
 
 
-def authenticate_user(user, message):
+def authenticate_user(message):
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     authorization_url = auth.get_authorization_url()
     authorization_url += '&force_login=true'
@@ -53,10 +53,8 @@ def get_details():
 
 def install():
     username, key, secret = authenticate_user(
-        'user',
         'Press Enter to authenticate your current account with Twitter...')
     olde_username, olde_key, olde_secret = authenticate_user(
-        'olde_user',
         'Press Enter to authenticate the year olde account with Twitter...')
 
     if platform.system() is not "Darwin":
@@ -200,8 +198,8 @@ def usage():
     sys.exit('Usage:\nInstall: twolde.py install\nUninstall: twolde.py rm\n')
 
 
-def do_retweet(api, id):
-    api.retweet(id=id)
+def do_retweet(api, status_id):
+    api.retweet(id=status_id)
 
 
 def do_tweet(api, text, in_reply_to_status_id):
