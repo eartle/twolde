@@ -7,6 +7,7 @@ import platform
 import time
 import sched
 from datetime import datetime
+from HTMLParser import HTMLParser
 import ConfigParser
 
 CONFIG_FILENAME = 'config.ini'
@@ -174,14 +175,13 @@ def run():
                 print 'Next tweet time: {} UTC (in {} seconds)'.format(
                     next_tweet.created_at.ctime(), sleep_seconds)
 
-
                 # do retweets properly
                 if next_tweet.retweeted:
                     s.enter(max(1, sleep_seconds), 1, do_retweet,
                             [olde_api, next_tweet.retweeted_status.id])
                 else:
                     s.enter(max(1, sleep_seconds), 1, do_tweet,
-                            [olde_api, next_tweet.text,
+                            [olde_api, HTMLParser().unescape(next_tweet.text),
                              next_tweet.in_reply_to_status_id])
 
                 s.run()
