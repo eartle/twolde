@@ -170,8 +170,8 @@ def run():
 
                 print 'Next tweet: "{}"'.format(
                     next_tweet.text.encode('utf-8'))
-                print 'Next tweet time: {} UTC (in {} seconds)'.format(
-                    next_tweet.created_at.ctime(), sleep_seconds)
+                print 'Next tweet time: {} UTC (in {} minutes)'.format(
+                    next_tweet.created_at.ctime(), int(sleep_seconds/60))
 
                 # do retweets properly
                 if next_tweet.retweeted:
