@@ -170,8 +170,8 @@ def run():
 
                 print 'Next tweet: "{}"'.format(
                     next_tweet.text.encode('utf-8'))
-                print 'Next tweet time: {} UTC (in {} seconds)'.format(
-                    next_tweet.created_at.ctime(), sleep_seconds)
+                print 'Next tweet time: {} UTC (in {})'.format(
+                    next_tweet.created_at.ctime(), nice_time(sleep_seconds))
 
                 # do retweets properly
                 if next_tweet.retweeted:
@@ -204,6 +204,22 @@ def do_retweet(api, status_id):
 
 def do_tweet(api, text, in_reply_to_status_id):
     api.update_status(status=text, in_reply_to_status_id=in_reply_to_status_id)
+
+
+def nice_time(seconds):
+    """Seconds in a more readable format"""
+    minutes, seconds = divmod(int(seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        text = (str(hours) + " hours, " +
+                str(minutes) + " minutes, " +
+                str(seconds) + " seconds")
+    elif minutes:
+        text = (str(minutes) + " minutes, " +
+                str(seconds) + " seconds")
+    else:
+        text = (str(seconds) + " seconds")
+    return text
 
 
 if __name__ == '__main__':
