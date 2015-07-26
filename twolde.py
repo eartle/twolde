@@ -206,19 +206,31 @@ def do_tweet(api, text, in_reply_to_status_id):
     api.update_status(status=text, in_reply_to_status_id=in_reply_to_status_id)
 
 
+def pluralise(quantity, unit):
+    """
+    Assumes we can pluralise by simply appending an S.
+    quantity is an integer like 2.
+    unit is a string like "hour".
+    """
+    if quantity > 1:
+        return str(quantity) + " " + unit + "s"
+    else:
+        return str(quantity) + " " + unit
+
+
 def nice_time(seconds):
     """Seconds in a more readable format"""
     minutes, seconds = divmod(int(seconds), 60)
     hours, minutes = divmod(minutes, 60)
     if hours:
-        text = (str(hours) + " hours, " +
-                str(minutes) + " minutes, " +
-                str(seconds) + " seconds")
+        text = (pluralise(hours, "hour") + ", " +
+                pluralise(minutes, "minute") + ", " +
+                pluralise(seconds, "second"))
     elif minutes:
-        text = (str(minutes) + " minutes, " +
-                str(seconds) + " seconds")
+        text = (pluralise(minutes, "minute") + ", " +
+                pluralise(seconds, "second"))
     else:
-        text = (str(seconds) + " seconds")
+        text = (pluralise(seconds, "second"))
     return text
 
 
