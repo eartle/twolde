@@ -2,29 +2,13 @@
 
 This a tool that will tweet your tweets from one year ago to another account.
 
-To use Twolde you will first need to install its dependancy <a href="https://github.com/tweepy/tweepy">Tweepy</a>.
+## Install
 
-You will then need to clone this repository and run twolde.py in a terminal like this:
+To install Twolde you'll need Python and then you can run `pip install git+git://github.com/eartle/twolde.git` which will install twolde as a Python package. You can then run `twolde install` which will ask you to authenticate with Twitter and then enter the verification code that Twitter presents to you, first with your main account and then with the account that you want your year old tweets to go to. This will store the Twitter access details for both accounts in a config file located here `~/.twolde/config.ini`. 
 
-```
-python twolde.py install
-```
+To run Twolde you'll need to do this `twolde run`. You'll probably want to run this in a screen session on a server, or something, as it'll run until you haven't tweeted for a year.
 
-You will be asked to authenticate with Twitter and then enter the verification code that Twitter presents to you, first with your main account and then with the account that you want your year old tweets to go to.
-
-To run Twolde you'll need to do this
-
-```
-python twolde.py run
-```
-
-You'll probably want to run this in a screen session on a server, or something, as it'll run until you haven't tweeted for a year.
-
-If you decide you don't want Twolde to run anymore you can uninstall like this:
-
-```
-python twolde.py rm
-```
+If you decide you don't want Twolde to run anymore you can uninstall like this `twolde rm` which will delete the config file where all your details are stored and then `pip uninstall twolde` to remove the script itself.
 
 ## Tech notes
 
@@ -35,4 +19,3 @@ python twolde.py rm
 
 * Have a configurable number of years in the past
 * Deal with leap years nicely (It's march so we should be okay for a while)
-* add a setup.py so this can be pip installed
