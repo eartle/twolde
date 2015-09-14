@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import sys
 import tweepy
-import platform
 import time
 import sched
 from datetime import datetime
@@ -44,12 +44,15 @@ def authenticate_user(message):
 
 
 def get_details():
-    if platform.system() is not "Darwin":
-        config = ConfigParser.ConfigParser()
-        config.read(CONFIG_FILENAME)
-        return config.get("current", "username"), config.get("current", "key"), config.get("current", "secret"), config.get("olde", "username"), config.get("olde", "key"), config.get("olde", "secret")
-    else:
-        return sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], sys.argv[7]
+    config = ConfigParser.ConfigParser()
+    config.read(CONFIG_FILENAME)
+    return (
+        config.get("current", "username"),
+        config.get("current", "key"),
+        config.get("current", "secret"),
+        config.get("olde", "username"),
+        config.get("olde", "key"),
+        config.get("olde", "secret"))
 
 
 def install():
@@ -58,52 +61,21 @@ def install():
     olde_username, olde_key, olde_secret = authenticate_user(
         'Press Enter to authenticate the year olde account with Twitter...')
 
-    if platform.system() is not "Darwin":
-        config = ConfigParser.ConfigParser()
-        # write the olde details
-        config.add_section("olde")
-        config.set("olde", "username", olde_username)
-        config.set("olde", "key", olde_key)
-        config.set("olde", "secret", olde_secret)
-        # write the current details
-        config.add_section("current")
-        config.set("current", "username", username)
-        config.set("current", "key", key)
-        config.set("current", "secret", secret)
-        # save the config file
-        cfgfile = open(CONFIG_FILENAME, 'w')
-        config.write(cfgfile)
-        cfgfile.close()
-    else:
-        string = ""
-
-        # read from the plist
-        with open(os.path.realpath(PLIST), 'r') as f:
-            string = f.read()
-
-        # replace the plist strings
-        string = string.replace("%PYTHON%",
-                                os.popen('which python').read().strip())
-        string = string.replace("%SCRIPT%", os.path.realpath('twolde.py'))
-        string = string.replace("%LOG_FILE%", os.path.expanduser(
-                                '~/Library/Logs/twolde.log'))
-        string = string.replace("%USER_USERNAME%", username)
-        string = string.replace("%USER_TOKEN_KEY%", key)
-        string = string.replace("%USER_TOKEN_KEY_SECRET%", secret)
-        string = string.replace("%OLDE_USER_USERNAME%", olde_username)
-        string = string.replace("%OLDE_USER_TOKEN_KEY%", olde_key)
-        string = string.replace("%OLDE_USER_TOKEN_KEY_SECRET%", olde_secret)
-
-        if os.path.isfile(os.path.expanduser(PLIST_PATH)):
-            os.popen('launchctl unload -w ' + os.path.expanduser(PLIST_PATH))
-
-        # write the plist
-        with open(os.path.expanduser(PLIST_PATH), 'w') as f:
-            string = f.write(string)
-
-        # don't wait for a restart for launchd to notice this
-        os.system('chmod a+x twolde.py')
-        os.popen('launchctl load -w ' + os.path.expanduser(PLIST_PATH))
+    config = ConfigParser.ConfigParser()
+    # write the olde details
+    config.add_section("olde")
+    config.set("olde", "username", olde_username)
+    config.set("olde", "key", olde_key)
+    config.set("olde", "secret", olde_secret)
+    # write the current details
+    config.add_section("current")
+    config.set("current", "username", username)
+    config.set("current", "key", key)
+    config.set("current", "secret", secret)
+    # save the config file
+    cfgfile = open(CONFIG_FILENAME, 'w')
+    config.write(cfgfile)
+    cfgfile.close()
 
 
 def uninstall():
@@ -129,7 +101,7 @@ def run():
     olde_auth.set_access_token(olde_key, olde_secret)
     olde_api = tweepy.API(olde_auth)
 
-    s = sched.scheduler(time.time, time.sleep)
+    scheduler = sched.scheduler(time.time, time.sleep)
 
     now, last_year = get_times()
     best = now
@@ -175,14 +147,15 @@ def run():
 
                 # do retweets properly
                 if next_tweet.retweeted:
-                    s.enter(max(1, sleep_seconds), 1, do_retweet,
-                            [olde_api, next_tweet.retweeted_status.id])
+                    scheduler.enter(
+                        max(1, sleep_seconds), 1, do_retweet,
+                        [olde_api, next_tweet.retweeted_status.id])
                 else:
-                    s.enter(max(1, sleep_seconds), 1, do_tweet,
-                            [olde_api, HTMLParser().unescape(next_tweet.text),
-                             next_tweet.in_reply_to_status_id])
+                    scheduler.enter(
+                        max(1, sleep_seconds), 1, do_tweet,
+                        [olde_api, HTMLParser().unescape(next_tweet.text), next_tweet.in_reply_to_status_id])
 
-                s.run()
+                scheduler.run()
 
                 index -= 1
 
@@ -192,10 +165,6 @@ def run():
             best, last_year = get_times()
 
     print "I'm finished!"
-
-
-def usage():
-    sys.exit('Usage:\nInstall: twolde.py install\nUninstall: twolde.py rm\n')
 
 
 def do_retweet(api, status_id):
@@ -234,15 +203,23 @@ def nice_time(seconds):
     return text
 
 
-if __name__ == '__main__':
+def main():
+    """ main """
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument(
+        dest='command',
+        choices=['install', 'run', 'remove'],
+        help='the twolde command to run')
+    args = parser.parse_args()
+
     # very basic argument parsing
-    if len(sys.argv) < 2:
-        usage()
-    elif sys.argv[1] == "install":
+    if args.command == "install":
         install()
-    elif sys.argv[1] == "rm":
+    elif args.command == "rm":
         uninstall()
-    elif sys.argv[1] == "run":
+    elif args.command == "run":
         run()
-    else:
-        usage()
+
+
+if __name__ == '__main__':
+    main()
