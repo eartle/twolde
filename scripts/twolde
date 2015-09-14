@@ -10,14 +10,10 @@ from datetime import datetime
 from HTMLParser import HTMLParser
 import ConfigParser
 
-CONFIG_FILENAME = 'config.ini'
+CONFIG_FILENAME = os.path.expanduser('~/.twolde/config.ini')
 
 CONSUMER_KEY = 'i4VfqFLIY7E08Ros9AhA'
 CONSUMER_SECRET = 'XP0JjlMMPtaC0IOvHv6VXzE31izdiUy1rXcoPeYg'
-
-PLIST = 'uk.co.mobbler.twolde.plist'
-PLIST_PATH = '~/Library/LaunchAgents/' + PLIST
-
 
 def get_times():
     now = datetime.utcnow()
@@ -73,16 +69,16 @@ def install():
     config.set("current", "key", key)
     config.set("current", "secret", secret)
     # save the config file
+    config_folder = os.path.dirname(CONFIG_FILENAME)
+    if not os.path.exists(config_folder):
+        os.makedirs(config_folder)
     cfgfile = open(CONFIG_FILENAME, 'w')
     config.write(cfgfile)
     cfgfile.close()
 
 
 def uninstall():
-    if os.path.isfile(os.path.expanduser(PLIST_PATH)):
-        os.popen('launchctl unload -w ' +
-                 os.path.expanduser(PLIST_PATH))
-        os.popen('rm ' + os.path.expanduser(PLIST_PATH))
+    os.remove(CONFIG_FILENAME)
 
 
 def run():
