@@ -2,8 +2,6 @@
 
 This a tool that will tweet your tweets from one year ago to another account.
 
-## Install
-
 To install Twolde you'll need Python and then you can run `pip install git+git://github.com/eartle/twolde.git` which will install twolde as a Python package. You can then run `twolde install` which will ask you to authenticate with Twitter and then enter the verification code that Twitter presents to you, first with your main account and then with the account that you want your year old tweets to go to. This will store the Twitter access details for both accounts in a config file located here `~/.twolde/config.ini`. 
 
 To run Twolde you'll need to do this `twolde run`. You'll probably want to run this in a screen session on a server, or something, as it'll run until you haven't tweeted for a year.
