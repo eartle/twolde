@@ -15,6 +15,7 @@ CONFIG_FILENAME = os.path.expanduser('~/.twolde/config.ini')
 CONSUMER_KEY = 'i4VfqFLIY7E08Ros9AhA'
 CONSUMER_SECRET = 'XP0JjlMMPtaC0IOvHv6VXzE31izdiUy1rXcoPeYg'
 
+
 def get_times():
     now = datetime.utcnow()
     last_year = datetime(now.year - 1, now.month, now.day, now.hour,
@@ -149,7 +150,8 @@ def run():
                 else:
                     scheduler.enter(
                         max(1, sleep_seconds), 1, do_tweet,
-                        [olde_api, HTMLParser().unescape(next_tweet.text), next_tweet.in_reply_to_status_id])
+                        [olde_api, HTMLParser().unescape(next_tweet.text),
+                         next_tweet.in_reply_to_status_id])
 
                 scheduler.run()
 
