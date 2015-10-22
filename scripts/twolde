@@ -168,7 +168,16 @@ def do_retweet(api, status_id):
 
 
 def do_tweet(api, text, in_reply_to_status_id):
-    api.update_status(status=text, in_reply_to_status_id=in_reply_to_status_id)
+    try:
+        api.update_status(status=text,
+                          in_reply_to_status_id=in_reply_to_status_id)
+    except tweepy.error.TweepError as e:
+        ecode = e[0][0]['code']
+        if ecode == 186:  # Status is over 140 characters.
+            # Ignore this tweet and continue
+            pass
+        else:
+            raise
 
 
 def pluralise(quantity, unit):
