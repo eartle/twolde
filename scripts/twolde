@@ -15,6 +15,7 @@ CONFIG_FILENAME = os.path.expanduser('~/.twolde/config.ini')
 CONSUMER_KEY = 'i4VfqFLIY7E08Ros9AhA'
 CONSUMER_SECRET = 'XP0JjlMMPtaC0IOvHv6VXzE31izdiUy1rXcoPeYg'
 
+
 def get_times():
     now = datetime.utcnow()
     last_year = datetime(now.year - 1, now.month, now.day, now.hour,
@@ -149,7 +150,8 @@ def run():
                 else:
                     scheduler.enter(
                         max(1, sleep_seconds), 1, do_tweet,
-                        [olde_api, HTMLParser().unescape(next_tweet.text), next_tweet.in_reply_to_status_id])
+                        [olde_api, HTMLParser().unescape(next_tweet.text),
+                         next_tweet.in_reply_to_status_id])
 
                 scheduler.run()
 
@@ -168,7 +170,16 @@ def do_retweet(api, status_id):
 
 
 def do_tweet(api, text, in_reply_to_status_id):
-    api.update_status(status=text, in_reply_to_status_id=in_reply_to_status_id)
+    try:
+        api.update_status(status=text,
+                          in_reply_to_status_id=in_reply_to_status_id)
+    except tweepy.error.TweepError as e:
+        ecode = e[0][0]['code']
+        if ecode == 186:  # Status is over 140 characters.
+            # Ignore this tweet and continue
+            pass
+        else:
+            raise
 
 
 def pluralise(quantity, unit):
